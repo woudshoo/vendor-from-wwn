@@ -40,7 +40,7 @@
   (url-retrieve-synchronously (vendor-from-wwn/oui-url)))
 
 (defun vendor-from-wwn/oui-list-from-buffer ()
-  "Parses the current buffer and returns an assoc list from vendor id to vendor string."
+  "Parse the current buffer and returns an assoc list from vendor id to vendor string."
   (interactive)
   (let (id-to-vendor)
     (goto-char (point-min))
@@ -53,7 +53,8 @@
     id-to-vendor))
 
 (defun vendor-from-wwn/oui-list-from-file ()
-  "Parses the oui.txt file and returns an assoc list from vendor id to vendor string. Returns nil on some fail."
+  "Parse the oui.txt file and return an assoc list from vendor id to vendor string.
+Returns nil on some fail."
   (when (file-exists-p (vendor-from-wwn/oui-filename))
     (with-temp-buffer
       (insert-file-contents (vendor-from-wwn/oui-filename))
@@ -61,7 +62,7 @@
       )))
 
 (defun vendor-from-wwn/oui-list-from-url ()
-  "Retrieves the oui.txt file and returns an assoc list from vendor id to vendor string."
+  "Retrieve the oui.txt file and returns an assoc list from vendor id to vendor string."
   (let ((buffer (vendor-from-wwn/oui-buffer))
         oui-list)
     (when buffer
@@ -75,29 +76,28 @@
   )
 
 (defun vendor-from-wwn/oui-list ()
-  "Returns an assoc list of vendor id to vendor string. Does caching on first call."
+  "Return an assoc list of vendor id to vendor string. Does caching on first call."
   (setq vendor-from-wwn/oui-list (or vendor-from-wwn/oui-list
                                      (vendor-from-wwn/oui-list-from-file)
-                                     (vendor-from-wwn/oui-list-from-url)
-                                     ))
+                                     (vendor-from-wwn/oui-list-from-url)))
   vendor-from-wwn/oui-list)
 
 (defun vendor-from-wwn/normalize-wwn (wwn)
-  "Returns the normalized form of WWN."
+  "Return the normalized form of WWN."
   (mapconcat 'identity (split-string (downcase wwn) ":") ""))
 
 (defun vendor-from-wwn/pairs (str)
-  "Returns a list of strings of length 2. E.g. \"aabbcc\" would yield
+  "Return a list of strings of length 2. E.g. \"aabbcc\" would yield
  (list \"aa\" \"bb\" \"cc\")."
   (mapcar (lambda(arg) (concat (car arg) (cadr arg)))
             (-partition-all 2 (split-string str "" t))))
 
 (defun vendor-from-wwn/colon-separated-pairs (str)
-  "Returns STR, split into pairs, separated by :'s."
+  "Return STR, split into pairs, separated by :'s."
   (mapconcat 'identity (vendor-from-wwn/pairs (vendor-from-wwn/normalize-wwn str)) ":"))
 
 (defun vendor-from-wwn/vendor-specific-nice-wwn (wwn)
-  "Converts WWN to nicely formatted string with vendor-specific information."
+  "Convert WWN to nicely formatted string with vendor-specific information."
   (let ((vendor-specific-extension (vendor-specific-extension-from-wwn wwn)))
     (concat "[" (vendor-from-wwn/colon-separated-pairs (vendor-sequence-from-wwn wwn)) "]"
             (when vendor-specific-extension
@@ -112,14 +112,14 @@
             (vendor-from-wwn/vendor-specific-nice-wwn wwn))))
   
 (defun vendor-from-wwn/valid-wwn (wwn)
-  "Checks the validity of a WWN. Retuns nil when invalid."
+  "Check the validity of a WWN. Retuns nil when invalid."
   (let ((wwn (vendor-from-wwn/normalize-wwn wwn)))
     (and (or (= (length wwn) 16)
              (= (length wwn) 32))
          (string-match "^[[:xdigit:]]+$" wwn))))
 
 (defun vendor-sequence-from-wwn (wwn)
-  "Returns the vendor sequence or serial number from WWN."
+  "Return the vendor sequence or serial number from WWN."
   (let ((wwn (vendor-from-wwn/normalize-wwn wwn))
         (naa (network-address-authority-from-wwn wwn)))
     (cond ((or (equal naa "1")
@@ -132,12 +132,12 @@
 )))
 
 (defun vendor-specific-extension-from-wwn (wwn)
-  "Returns the vendor specific extension from WWN. Not every WWN has one, returns nil when not."
+  "Return the vendor specific extension from WWN. Not every WWN has one, returns nil when not."
   (when (equal (network-address-authority-from-wwn wwn) "6")
     (substring (vendor-from-wwn/normalize-wwn wwn) 16)))
 
 (defun oui-from-wwn (wwn)
-  "Returns the Organizationally Unique Identifier or OUI from WWN."
+  "Return the Organizationally Unique Identifier or OUI from WWN."
   (let ((wwn (vendor-from-wwn/normalize-wwn wwn))
         (naa (network-address-authority-from-wwn wwn)))
     (cond ((or (equal naa "1")
@@ -150,7 +150,7 @@
 
 
 (defun network-address-authority-from-wwn (wwn)
-  "Returns the Network Address Authority or NAA from WWN."
+  "Return the Network Address Authority or NAA from WWN."
   (let ((wwn (vendor-from-wwn/normalize-wwn wwn)))
     (cond ((equal (substring wwn 0 1) "1")
            "1")
@@ -159,11 +159,10 @@
           ((equal (substring wwn 0 1) "5")
            "5")
           ((equal (substring wwn 0 1) "6")
-           "6")
-)))
+           "6"))))
 
 (defun vendor-from-wwn (wwn)
-  "Returns the vendor for WWN."
+  "Return the vendor for WWN."
   (interactive)
   (let ((oui-list (vendor-from-wwn/oui-list))
         (oui (oui-from-wwn wwn)))
